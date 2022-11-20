@@ -1,0 +1,20 @@
+[
+    {
+        "team1": "Real Madryd",
+        "team2": "Barcelona",
+        "league": "La Liga",
+        "date": "20-10-10 20:30:00"
+    },
+    {
+        "team1": "Espanyol",
+        "team2": "Atletico Madryd",
+        "league": "La Liga",
+        "date": "20-10-10 21:30:00"
+    },
+    {
+        "team1": "Legia Warszawa",
+        "team2": "Śląsk Wrocłąw",
+        "league": "Ekstraklasa",
+        "date": "20-11-10 20:32:12"
+    }
+]

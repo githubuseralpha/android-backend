@@ -1,0 +1,42 @@
+[
+    {
+        "name": "Debile",
+        "code": "ABSD",
+        "leagues": [
+            {"name": "Ekstraklasa"},
+            {"name": "Bundesliga"}
+        ]
+    },
+    {
+        "name": "Debile2",
+        "code": "fddf",
+        "leagues": [
+            {"name": "Ekstraklasa"},
+            {"name": "Bundesliga"}
+        ]
+    },    
+    {
+        "name": "Debile3",
+        "code": "btrds",
+        "leagues": [
+            {"name": "Ekstraklasa"},
+            {"name": "Bundesliga"}
+        ]
+    },    
+    {
+        "name": "Debile4",
+        "code": "asdas",
+        "leagues": [
+            {"name": "Ekstraklasa"},
+            {"name": "La Liga"}
+        ]
+    },    
+    {
+        "name": "Debile5",
+        "code": "sdfdsf",
+        "leagues": [
+            {"name": "Ekstraklasa"},
+            {"name": "Bundesliga"}
+        ]
+    }
+]
