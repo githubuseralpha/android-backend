@@ -30,4 +30,9 @@ def populate():
             filtered = [l for l in leagues if l.name==game["league"]][0]
             filtered.games.append(games[-1])
 
+    u1 = User(login="patryk", password ="djsnc")
+    u1.memberships.append(groups[0])
+    u1.memberships.append(groups[3])
+    db.session.add(u1)
     db.session.commit()
+    

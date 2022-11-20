@@ -63,3 +63,15 @@ def games_by_group(id):
         query += league.games
     query.sort(key=lambda item: item.date)
     return jsonify([game.serialize for game in query])
+
+@bp.route('/games-by-user/<int:id>', methods=('GET',))
+def games_by_user(id):
+    query = []
+    memberships = models.User.query.get(id).memberships
+    leagues = []
+    for membership in memberships:
+        leagues += membership.leagues
+    for league in leagues:
+        query += league.games
+    query.sort(key=lambda item: item.date)
+    return jsonify([game.serialize for game in query])
