@@ -39,6 +39,10 @@ def games():
     query = models.Game.query.all()
     return jsonify([game.serialize for game in query])
 
+@bp.route('/bets', methods=('GET',))
+def bets():
+    query = models.Bet.query.all()
+    return jsonify([bet.serialize for bet in query])
 
 @bp.route('/group/<int:id>', methods=('GET',))
 def group(id):
@@ -46,7 +50,7 @@ def group(id):
     return jsonify(query.serialize)
 
 @bp.route('/games-by-league/<int:id>', methods=('GET',))
-def league(id):
+def games_by_league(id):
     query = models.League.query.get(id).games
     return jsonify([game.serialize for game in query])
 
@@ -63,6 +67,21 @@ def users_by_group(id):
 @bp.route('/user/<int:id>', methods=('GET',))
 def user(id):
     query = models.User.query.get(id)
+    return jsonify(query.serialize)
+
+@bp.route('/game/<int:id>', methods=('GET',))
+def game(id):
+    query = models.Game.query.get(id)
+    return jsonify(query.serialize)
+
+@bp.route('/bet/<int:id>', methods=('GET',))
+def bet(id):
+    query = models.Bet.query.get(id)
+    return jsonify(query.serialize)
+
+@bp.route('/league/<int:id>', methods=('GET',))
+def league(id):
+    query = models.League.query.get(id) 
     return jsonify(query.serialize)
 
 @bp.route('/tokens', methods=('GET',))
@@ -94,17 +113,17 @@ def games_by_user(id):
 
 @bp.route('/bets-by-player-and-group/<int:user_id>/<int:group_id>', methods=('GET',))
 def bets_by_player_and_group(user_id, group_id):
-    #query = models.bets.query.filter(models.bets.user_id==user_id) \
-    #                          .filter(models.bets.group_id==group_id) \
-    #                          .join(models.User, models.User.id==models.bets.user_id) \
-    #                          .join(models.Game, models.Game.id==models.bets.game_id) \
-    #                          .all()
-    query = models.User.query.get(user_id).bets
-    #                                       .join(models.Game, models.Game.id==models.bets.game_id)
-    for row in query:
-        print(row)
-    # return jsonify_row(query, ['user_id', 'game_id', 'option', 'odds', 'date' ])
-
+    query = models.Bet.query.filter(models.Bet.user==user_id) \
+                             .join(models.User, models.User.id==models.Bet.user) \
+                             .join(models.Game, models.Game.id==models.Bet.game) \
+                             .all()
+    games = []
+    leagues = models.Group.query.get(group_id).leagues
+    for league in leagues:
+        games += league.games
+    games = [game.id for game in games]
+    query = [q for q in query if q.game in games]
+    return jsonify([bet.serialize for bet in query])
 
 @bp.route('/login', methods=('POST', ))
 def login():

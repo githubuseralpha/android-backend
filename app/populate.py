@@ -33,8 +33,10 @@ def populate():
                               result=game["result"]))
             filtered = [l for l in leagues if l.name==game["league"]][0]
             filtered.games.append(games[-1])
+        users = []
         for user_data in json.load(users_file):
             user = (User(login=user_data["login"], password=user_data["password"]))
+            users.append(user)
             for membership in user_data["memberships"]:
                 user.memberships.append(groups[membership - 1])
             db.session.add(user)
@@ -44,6 +46,9 @@ def populate():
         #     user.bets.append(game)
         #     bet = [bet for bet in user.bets.all() if bet==game][0]
         #     print(bet)
+    bet = Bet(option=1, odds=2.0)
+    users[0].bets.append(bet)
+    games[2].bets.append(bet)
 
     db.session.commit()
     

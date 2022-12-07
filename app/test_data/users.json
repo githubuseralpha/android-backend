@@ -2,12 +2,12 @@
     {
         "login": "Adam",
         "password": "Ekstraklasa",
-        "memberships": [1]
+        "memberships": [1,2,3]
     },
     {
         "login": "Lasaasd",
         "password": "Ekstraklasa",
-        "memberships": [1, 2]
+        "memberships": [1, 2,3]
     },
     {
         "login": "jp2",

@@ -22,15 +22,7 @@ league_game = db.Table('league_game',
     db.Column('game_id', db.Integer, db.ForeignKey('game.id'), primary_key=True)
 )
 
-bets = db.Table('bets',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('game_id', db.Integer, db.ForeignKey('game.id'), primary_key=True),
-    db.Column('option', db.Integer),
-    db.Column('odds', db.Float),
-    db.Column('date', db.DateTime(timezone=True), server_default=now())
-)
-
-
+    
 class User(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     login = db.Column(db.String(100), nullable=False, unique=True)
@@ -39,8 +31,7 @@ class User(db.Model):
     tokens = db.relationship("Token")
     password = db.Column(db.String(50), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    bets = db.relationship('Game', secondary=bets, lazy='dynamic',
-        backref=db.backref('betters', lazy=True))
+    bets = db.relationship('Bet')
     
     @property
     def serialize(self):
@@ -100,6 +91,7 @@ class Game(db.Model):
     draw_odds = db.Column(db.Float, nullable=False)
     date = db.Column(db.DateTime(timezone=True), server_default=now())
     result = db.Column(db.Integer, nullable=False)
+    bets = db.relationship('Bet')
     
     @property
     def serialize(self):
@@ -127,4 +119,20 @@ class Token(db.Model):
            'id': self.id,
            'user': self.user,
            'expiration': self.expiration
+           }
+
+class Bet(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user = db.Column(db.Integer, db.ForeignKey("user.id"))
+    game = db.Column(db.Integer, db.ForeignKey("game.id"))
+    option = db.Column(db.Integer)
+    odds = db.Column(db.Float)
+    date = db.Column(db.DateTime(timezone=True), server_default=now())
+
+    @property
+    def serialize(self):
+        return {
+           'id': self.id,
+           'user': self.user,
+           'game': self.game
            }
