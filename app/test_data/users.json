@@ -1,0 +1,22 @@
+[
+    {
+        "login": "Adam",
+        "password": "Ekstraklasa",
+        "memberships": [1]
+    },
+    {
+        "login": "Lasaasd",
+        "password": "Ekstraklasa",
+        "memberships": [1, 2]
+    },
+    {
+        "login": "jp2",
+        "password": "Ekstraklasa",
+        "memberships": [2]
+    },
+    {
+        "login": "Dave",
+        "password": "Ekstraklasa",
+        "memberships": [1]
+    }
+]

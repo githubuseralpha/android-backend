@@ -10,6 +10,7 @@ def populate():
     db.create_all()
     
     with open("app\\test_data\\games.json") as games_file, \
+         open("app\\test_data\\users.json") as users_file, \
          open("app\\test_data\\leagues.json") as leagues_file, \
          open("app\\test_data\\groups.json") as groups_file:
         leagues = []
@@ -26,13 +27,23 @@ def populate():
             
         games = []
         for game in json.load(games_file):
-            games.append(Game(team1=game["team1"], team2=game["team2"], date=datetime.datetime.strptime(game["date"], '%y-%m-%d %H:%M:%S')))
+            games.append(Game(team1=game["team1"], team2=game["team2"], team1_odds=game["team1_odds"],
+                              team2_odds=game["team2_odds"], draw_odds=game["draw_odds"], 
+                              date=datetime.datetime.strptime(game["date"], '%y-%m-%d %H:%M:%S'),
+                              result=game["result"]))
             filtered = [l for l in leagues if l.name==game["league"]][0]
             filtered.games.append(games[-1])
+        for user_data in json.load(users_file):
+            user = (User(login=user_data["login"], password=user_data["password"]))
+            for membership in user_data["memberships"]:
+                user.memberships.append(groups[membership - 1])
+            db.session.add(user)
+        # for bet in json.load(bets_file):
+        #     user = User.query.get(bet["user_id"])
+        #     game = Game.query.get(bet["game_id"])
+        #     user.bets.append(game)
+        #     bet = [bet for bet in user.bets.all() if bet==game][0]
+        #     print(bet)
 
-    u1 = User(login="patryk", password ="djsnc")
-    u1.memberships.append(groups[0])
-    u1.memberships.append(groups[3])
-    db.session.add(u1)
     db.session.commit()
     

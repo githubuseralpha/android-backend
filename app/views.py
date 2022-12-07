@@ -1,5 +1,6 @@
+import datetime
 from flask import (
-    Blueprint, jsonify
+    Blueprint, Response, jsonify, request
 )
 
 from . import db, models
@@ -14,46 +15,60 @@ def jsonify_row(row, keys):
         })
     return jsonify(result)
 
+def get_user(code):
+    token = models.Token.query.filter(models.Token.code==code).first()
+    if not token: return None
+    user = token.user
+    return user
 
-@bp.route('/users', methods=('GET', 'POST'))
+
+@bp.route('/users', methods=('GET',))
 def users():
     query = models.User.query.all()
     return jsonify([user.serialize for user in query])
 
 
-@bp.route('/leagues', methods=('GET', 'POST'))
+@bp.route('/leagues', methods=('GET',))
 def leagues():
     query = models.League.query.all()
     return jsonify([league.serialize for league in query])
 
 
-@bp.route('/games', methods=('GET', 'POST'))
+@bp.route('/games', methods=('GET',))
 def games():
     query = models.Game.query.all()
     return jsonify([game.serialize for game in query])
 
 
-@bp.route('/group/<int:id>', methods=('GET', 'POST'))
+@bp.route('/group/<int:id>', methods=('GET',))
 def group(id):
     query = models.Group.query.get(id)
     return jsonify(query.serialize)
 
-@bp.route('/games-by-league/<int:id>', methods=('GET', 'POST'))
+@bp.route('/games-by-league/<int:id>', methods=('GET',))
 def league(id):
     query = models.League.query.get(id).games
     return jsonify([game.serialize for game in query])
 
-@bp.route('/groups-by-user/<int:id>', methods=('GET', 'POST'))
+@bp.route('/groups-by-user/<int:id>', methods=('GET',))
 def group_by_user(id):
     query = models.User.query.get(id).memberships
     return jsonify([group.serialize for group in query])
 
+@bp.route('/users-by-group/<int:id>', methods=('GET',))
+def users_by_group(id):
+    query = models.Group.query.get(id).members
+    return jsonify([user.serialize for user in query])
 
-@bp.route('/user/<int:id>', methods=('GET', 'POST'))
+@bp.route('/user/<int:id>', methods=('GET',))
 def user(id):
     query = models.User.query.get(id)
     return jsonify(query.serialize)
 
+@bp.route('/tokens', methods=('GET',))
+def tokens():
+    query = models.Token.query.all()
+    return jsonify([token.serialize for token in query])
 
 @bp.route('/games-by-group/<int:id>', methods=('GET',))
 def games_by_group(id):
@@ -75,3 +90,46 @@ def games_by_user(id):
         query += league.games
     query.sort(key=lambda item: item.date)
     return jsonify([game.serialize for game in query])
+
+
+@bp.route('/bets-by-player-and-group/<int:user_id>/<int:group_id>', methods=('GET',))
+def bets_by_player_and_group(user_id, group_id):
+    #query = models.bets.query.filter(models.bets.user_id==user_id) \
+    #                          .filter(models.bets.group_id==group_id) \
+    #                          .join(models.User, models.User.id==models.bets.user_id) \
+    #                          .join(models.Game, models.Game.id==models.bets.game_id) \
+    #                          .all()
+    query = models.User.query.get(user_id).bets
+    #                                       .join(models.Game, models.Game.id==models.bets.game_id)
+    for row in query:
+        print(row)
+    # return jsonify_row(query, ['user_id', 'game_id', 'option', 'odds', 'date' ])
+
+
+@bp.route('/login', methods=('POST', ))
+def login():
+    request_data = request.get_json()
+    username = request_data['username']
+    password = request_data['password']
+    user = models.User.query.filter(models.User.login==username).first()
+    if not user:
+        return Response(str({'error': 'Invalid username or password'}), status=404)
+    
+    if user.password != password:
+        return Response(str({'error': 'Invalid password'}), status=404)
+    token = models.Token(user=user.id, code=models.generate_code(),
+                         expiration=datetime.datetime.now() + datetime.timedelta(seconds=30))
+    db.session.add(token)
+    db.session.commit()
+    return Response(str({'token': token.code, 'expiration': str(token.expiration)}), status=201)
+
+
+@bp.route('/register', methods=('POST', ))
+def register():
+    request_data = request.get_json()
+    username = request_data['username']
+    password = request_data['password']
+    user = models.User(login=username, password=password)
+    db.session.add(user)
+    db.session.commit()
+    return Response(str({'Username': user.login}), status=201)
