@@ -79,6 +79,23 @@ def bet(id):
     query = models.Bet.query.get(id)
     return jsonify(query.serialize)
 
+@bp.route('/post-bet', methods=('POST',))
+def post_bet():
+    request_data = request.get_json()
+    user = request_data['user']
+    game = request_data['game']
+    option = request_data['option']  
+    if option == 1:
+        odds = models.Game.query.get(game).team1_odds
+    elif option == 2:
+        odds = models.Game.query.get(game).team2_odds
+    elif option == 3:
+        odds = models.Game.query.get(game).draw_odds
+    bet = models.Bet(user=user, game=game, option=option, odds=odds)
+    db.session.add(bet)
+    db.session.commit()
+    return Response(str({'bet_id': bet.id}), status=201)
+
 @bp.route('/league/<int:id>', methods=('GET',))
 def league(id):
     query = models.League.query.get(id) 

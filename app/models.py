@@ -16,12 +16,6 @@ league_group = db.Table('league_group',
     db.Column('league_id', db.Integer, db.ForeignKey('league.id'), primary_key=True),
     db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True)
 )
-
-league_game = db.Table('league_game',
-    db.Column('league_id', db.Integer, db.ForeignKey('league.id'), primary_key=True),
-    db.Column('game_id', db.Integer, db.ForeignKey('game.id'), primary_key=True)
-)
-
     
 class User(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -68,15 +62,16 @@ class Group(db.Model):
 class League(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(100), nullable=False)
-    games = db.relationship('Game', secondary=league_game, lazy='subquery',
-        backref=db.backref('leagues', lazy=True))
+    games = db.relationship('Game')
+    country = db.Column(db.String(100), nullable=True)
     
     @property
     def serialize(self):
         return {
            'id': self.id,
            'name': self.name,
-           'games': [game.serialize for game in self.games]
+           'games': [game.serialize for game in self.games],
+           'country': self.country
            }
     
     def __repr__(self) -> str:
@@ -92,6 +87,7 @@ class Game(db.Model):
     date = db.Column(db.DateTime(timezone=True), server_default=now())
     result = db.Column(db.Integer, nullable=False)
     bets = db.relationship('Bet')
+    league = db.Column(db.Integer, db.ForeignKey("league.id"))
     
     @property
     def serialize(self):
@@ -103,7 +99,8 @@ class Game(db.Model):
            'team2_odds': self.team2_odds,
            'draw_odds': self.draw_odds,
            'result': self.result,
-           'date': self.date
+           'date': self.date,
+           'league': self.league
            }
         
 
@@ -134,5 +131,10 @@ class Bet(db.Model):
         return {
            'id': self.id,
            'user': self.user,
-           'game': self.game
+           'game': Game.query.get(self.game).serialize,
+           'option': self.option,
+           'odds': self.odds,
+           'date': self.date,
            }
+
+
