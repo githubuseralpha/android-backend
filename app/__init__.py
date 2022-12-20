@@ -17,7 +17,7 @@ app.register_blueprint(views.bp)
 
 from app.populate import *
 
-scheduler = FlaskScheduler(timezone="Europe/Warsaw", minutes=0, hours=1, seconds=0)
+scheduler = FlaskScheduler(timezone="Europe/Warsaw")
 
 from app.jobs import *
 

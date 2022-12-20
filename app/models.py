@@ -78,7 +78,7 @@ class League(db.Model):
         return f'{self.id} - {self.name}'
 
 class Game(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
     team1 = db.Column(db.String(100), nullable=False)
     team2 = db.Column(db.String(100), nullable=False)
     team1_odds = db.Column(db.Float, nullable=False)

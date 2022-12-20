@@ -1,17 +1,26 @@
 [
     {
-        "name": "Ekstraklasa"
+        "name": "Ekstraklasa",
+        "apiName": "Ekstraklasa"
     },
     {
-        "name": "La Liga"
+        "name": "La Liga",
+        "apiName": "LaLiga"
     },
     {
-        "name": "Serie A"
+        "name": "League One",
+        "apiName": "League One"
     },
     {
-        "name": "Bundesliga"
+        "name": "Bundesliga",
+        "apiName": "Bundesliga"
     },
     {
-        "name": "Premier League"
+        "name": "Premier League",
+        "apiName": "Premier League"
+    },
+    {
+        "name": "Serie A",
+        "apiName": "Serie A"
     }
 ]
