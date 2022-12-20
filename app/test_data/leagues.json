@@ -1,26 +1,32 @@
 [
     {
         "name": "Ekstraklasa",
-        "apiName": "Ekstraklasa"
+        "country": "Poland",
+        "apiId": 106
     },
     {
         "name": "La Liga",
-        "apiName": "LaLiga"
+        "country": "Spain",
+        "apiId": 140
     },
     {
         "name": "League One",
-        "apiName": "League One"
+        "country": "France",
+        "apiId": 61
     },
     {
         "name": "Bundesliga",
-        "apiName": "Bundesliga"
+        "country": "Germany",
+        "apiId": 78
     },
     {
         "name": "Premier League",
-        "apiName": "Premier League"
+        "country": "England",
+        "apiId": 39
     },
     {
         "name": "Serie A",
-        "apiName": "Serie A"
+        "country": "Italy",
+        "apiId": 135
     }
 ]

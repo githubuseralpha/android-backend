@@ -1,4 +1,5 @@
 import datetime
+import json
 from flask import (
     Blueprint, Response, jsonify, request
 )
@@ -157,7 +158,10 @@ def login():
                          expiration=datetime.datetime.now() + datetime.timedelta(seconds=30))
     db.session.add(token)
     db.session.commit()
-    return Response(str({'token': token.code, 'expiration': str(token.expiration)}), status=201)
+    return Response(str({'token': token.code,
+                         'expiration': str(token.expiration),
+                         'user_id': user.id,
+                         }), status=201)
 
 
 @bp.route('/register', methods=('POST', ))

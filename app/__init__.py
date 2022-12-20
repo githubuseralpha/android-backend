@@ -23,4 +23,3 @@ from app.jobs import *
 
 scheduler.init_app(app)
 scheduler.start()
-

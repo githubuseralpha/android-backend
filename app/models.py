@@ -88,6 +88,7 @@ class Game(db.Model):
     result = db.Column(db.Integer, nullable=False)
     bets = db.relationship('Bet')
     league = db.Column(db.Integer, db.ForeignKey("league.id"))
+    api_id = db.Column(db.Integer, nullable=False, default=1)
     
     @property
     def serialize(self):
@@ -100,7 +101,8 @@ class Game(db.Model):
            'draw_odds': self.draw_odds,
            'result': self.result,
            'date': self.date,
-           'league': self.league
+           'league': self.league,
+           'api_id': self.api_id
            }
         
 

@@ -1,15 +1,17 @@
 import datetime
 import json
+import time
 import requests
 
 from . import scheduler, models, db
 
+
 with open("app\\test_data\\leagues.json") as leagues_file:
-    leagues = []
+    league_api_names = {}
     for league in json.load(leagues_file):
-        leagues.append(league["apiName"])
-   
-DAYS_AHEAD = 11
+        league_api_names[league["apiId"]] = league["name"] 
+        
+DAYS_AHEAD = -60
 
 
 @scheduler.job(seconds=10, minutes=0, hours=0)
@@ -18,42 +20,108 @@ def clean_tokens():
     tokens = models.Token.query.filter(models.Token.expiration < datetime.datetime.now())
     tokens.delete()
     db.session.commit()
-
-
-@scheduler.job(seconds=10, minutes=10, hours=10)
-def add_matches():
-    print('fetching')
-    url =  f'https://footapi7.p.rapidapi.com/api/matches/{datetime.datetime.now().day + DAYS_AHEAD}/{datetime.datetime.now().month}/{datetime.datetime.now().year}'
-    key = '1fd90887c0msh74d71f6c1452bcdp1bec48jsn2ba817012bc6'
-    host = 'footapi7.p.rapidapi.com'
+   
+ 
+@scheduler.job(seconds=10, minutes=0, hours=1)
+def update_matches():
+    date = datetime.date.today() + datetime.timedelta(days=DAYS_AHEAD)
+    url_fixtures =  f'https://v3.football.api-sports.io/fixtures?date=' + date.strftime("%Y-%m-%d")
+    key = 'add14e4a8d6b3f8d81eb7677036180e8'
+    host = 'v3.football.api-sports.io'
     
-    data = requests.get(url,
-                        headers={"X-RapidAPI-Key": key, "X-RapidAPI-Host": host})
-    if not data:
+    fixtures_data = requests.get(url_fixtures,
+                        headers={"x-rapidapi-key": key, "x-rapidapi-host": host})
+    
+    if not fixtures_data:
         return
+    # with open("app\\sample.json") as file:
+    #     data = json.load(file)
+            
+    fixtures_data = fixtures_data.json()
     
-    data = data.json()
-    games = data["events"]
+    games = fixtures_data["response"]
+    game_query = models.Game.query.all()
+    
     for game in games:
-        comp = game["tournament"]["name"]
-        if comp not in leagues:
+        comp = game["league"]["id"]
+        if comp not in league_api_names.keys():
             continue
-        team1 = game["homeTeam"]["name"]
-        team2 = game["awayTeam"]["name"]
+        api_id = game["fixture"]["id"]
+
+        
+        home_goals = game["goals"]["home"]
+        away_goals = game["goals"]["away"]
+        if home_goals == None:
+            return
+
+        game_inst = [game for game in game_query if game.api_id == api_id]
+        if game_inst:
+            if home_goals > away_goals:
+                winner = 1
+            elif home_goals < away_goals:
+                winner = 2
+            else:
+                winner = 3
+            game_inst[0].result = winner
+            db.session.commit()
+
+
+@scheduler.job(seconds=10, minutes=0, hours=24)
+def add_matches():
+    date = datetime.date.today() + datetime.timedelta(days=DAYS_AHEAD)
+    url_fixtures =  f'https://v3.football.api-sports.io/fixtures?date=' + date.strftime("%Y-%m-%d")
+    url_odds =  f'https://v3.football.api-sports.io/odds?date=' + date.strftime("%Y-%m-%d")
+    key = 'add14e4a8d6b3f8d81eb7677036180e8'
+    host = 'v3.football.api-sports.io'
+    
+    odds_data = requests.get(url_odds,
+                        headers={"x-rapidapi-key": key, "x-rapidapi-host": host})
+    fixtures_data = requests.get(url_fixtures,
+                        headers={"x-rapidapi-key": key, "x-rapidapi-host": host})
+    
+    if not odds_data:
+        return
+    # with open("app\\sample.json") as file:
+    #     data = json.load(file)
+            
+    odds_data = odds_data.json()
+    fixtures_data = fixtures_data.json()
+    
+    d = json.dumps(fixtures_data, indent=4)
+    
+    with open("app\\sample3.json", "w") as file:
+        file.write(d)
+    
+    odds = odds_data["response"]
+    games = fixtures_data["response"]
+    league_query = models.League.query.all()
+    game_query = models.Game.query.all()
+    
+    for game in games:
+        comp = game["league"]["id"]
+        if comp not in league_api_names.keys():
+            continue
+        team1 = game["teams"]["home"]["name"]
+        team2 = game["teams"]["away"]["name"]
+        api_id = game["fixture"]["id"]
+        odd = [o for o in odds if o["fixture"]["id"] == api_id]
+        team1_odds = odd[0]["bookmakers"][0]["bets"][0]["values"][0]["odd"] if odd else -1
+        team2_odds = odd[0]["bookmakers"][0]["bets"][0]["values"][2]["odd"] if odd else -1
+        draw_odds = odd[0]["bookmakers"][0]["bets"][0]["values"][1]["odd"] if odd else -1 
         date = datetime.date.today() + datetime.timedelta(days=DAYS_AHEAD)
-        league = models.League.query.filter_by(name=comp).first()
-        games = db.session.query(models.Game).filter_by(team1=team1)
-        if games.first():
-            continue
+        league = [l for l in league_query if l.name == league_api_names[comp]][0]
+        if [game for game in game_query if game.api_id == api_id]:
+            return
         new_game = models.Game(
             team1=team1,
             team2=team2,
             date=date,
-            team1_odds=1,
-            team2_odds=1,
-            draw_odds=1,
-            league=1,
-            result=league
+            team1_odds=team1_odds,
+            team2_odds=team2_odds,
+            draw_odds=draw_odds,
+            league=league.id,
+            result=0,
+            api_id=api_id
         )
         db.session.add(new_game)
     db.session.commit()

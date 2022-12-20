@@ -10,11 +10,15 @@ class FlaskScheduler:
         self._registered_functions = []
 
         self.trigger = trigger
+        self.started = False
 
     def init_app(self, app):
         self.app = app
 
     def start(self):
+        if self.started:
+            return
+        self.started = True
         for func in self._registered_functions:
             self.scheduler.add_job(func=func[0],
                                    trigger=self.trigger,
