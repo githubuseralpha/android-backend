@@ -11,12 +11,12 @@ with open("app\\test_data\\leagues.json") as leagues_file:
     for league in json.load(leagues_file):
         league_api_names[league["apiId"]] = league["name"] 
         
-DAYS_AHEAD = -60
+DAYS_AHEAD = 0
 
 
-@scheduler.job(seconds=10, minutes=0, hours=0)
+@scheduler.job(seconds=10, minutes=1, hours=0)
 def clean_tokens():
-    print('Removing')
+    print('REMOVE TOKENS')
     tokens = models.Token.query.filter(models.Token.expiration < datetime.datetime.now())
     tokens.delete()
     db.session.commit()
@@ -24,7 +24,8 @@ def clean_tokens():
  
 @scheduler.job(seconds=10, minutes=0, hours=1)
 def update_matches():
-    date = datetime.date.today() + datetime.timedelta(days=DAYS_AHEAD)
+    print('UPDATE MATCHES')
+    date = datetime.date.today()
     url_fixtures =  f'https://v3.football.api-sports.io/fixtures?date=' + date.strftime("%Y-%m-%d")
     key = 'add14e4a8d6b3f8d81eb7677036180e8'
     host = 'v3.football.api-sports.io'
@@ -68,6 +69,7 @@ def update_matches():
 
 @scheduler.job(seconds=10, minutes=0, hours=24)
 def add_matches():
+    print('ADD MATCHES')
     date = datetime.date.today() + datetime.timedelta(days=DAYS_AHEAD)
     url_fixtures =  f'https://v3.football.api-sports.io/fixtures?date=' + date.strftime("%Y-%m-%d")
     url_odds =  f'https://v3.football.api-sports.io/odds?date=' + date.strftime("%Y-%m-%d")

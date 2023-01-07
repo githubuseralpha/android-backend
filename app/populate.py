@@ -15,7 +15,7 @@ def populate():
          open("app\\test_data\\groups.json") as groups_file:
         leagues = []
         for league in json.load(leagues_file):
-            leagues.append(League(name=league["name"]))
+            leagues.append(League(name=league["name"], country=league["country"]))
             db.session.add(leagues[-1])
             
         groups = []

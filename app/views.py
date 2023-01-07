@@ -143,9 +143,21 @@ def bets_by_player_and_group(user_id, group_id):
     query = [q for q in query if q.game in games]
     return jsonify([bet.serialize for bet in query])
 
+@bp.route('/bets-by-player/<int:user_id>', methods=('GET',))
+def bets_by_player(user_id):
+    query = models.Bet.query.filter(models.Bet.user==user_id) \
+                             .join(models.User, models.User.id==models.Bet.user) \
+                             .join(models.Game, models.Game.id==models.Bet.game) \
+                             .all()
+    return jsonify([bet.serialize for bet in query])
+
 @bp.route('/login', methods=('POST', ))
 def login():
-    request_data = request.get_json()
+    try:
+        request_data = request.get_json()
+    except:
+        print("coś nie halo")
+    print(request_data)
     username = request_data['username']
     password = request_data['password']
     user = models.User.query.filter(models.User.login==username).first()
@@ -161,6 +173,7 @@ def login():
     return Response(str({'token': token.code,
                          'expiration': str(token.expiration),
                          'user_id': user.id,
+                         'username': user.login,
                          }), status=201)
 
 
@@ -169,7 +182,9 @@ def register():
     request_data = request.get_json()
     username = request_data['username']
     password = request_data['password']
+    if models.User.query.filter(models.User.login==username).first():
+        return Response(str({'created': False}), status=200)
     user = models.User(login=username, password=password)
     db.session.add(user)
     db.session.commit()
-    return Response(str({'Username': user.login}), status=201)
+    return Response(str({'Username': user.login, 'created': True}), status=201)
