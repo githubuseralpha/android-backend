@@ -90,12 +90,20 @@ def post_bet():
         odds = models.Game.query.get(game).team1_odds
     elif option == 2:
         odds = models.Game.query.get(game).team2_odds
-    elif option == 3:
+    elif option == 0:
         odds = models.Game.query.get(game).draw_odds
-    bet = models.Bet(user=user, game=game, option=option, odds=odds)
-    db.session.add(bet)
-    db.session.commit()
-    return Response(str({'bet_id': bet.id}), status=201)
+    
+    existing_bet = models.Bet.query.filter(models.Bet.user==user).filter(models.Bet.game==game).first()
+    if existing_bet:
+        existing_bet.option = option
+        existing_bet.odds = odds
+        db.session.commit()
+        return Response(str({'bet_id': existing_bet.id}), status=201)
+    else:
+        bet = models.Bet(user=user, game=game, option=option, odds=odds)
+        db.session.add(bet)
+        db.session.commit()
+        return Response(str({'bet_id': bet.id}), status=201)
 
 @bp.route('/league/<int:id>', methods=('GET',))
 def league(id):

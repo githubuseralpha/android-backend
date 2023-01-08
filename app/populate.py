@@ -48,7 +48,7 @@ def populate():
         #     print(bet)
     bet = Bet(option=1, odds=2.0)
     users[0].bets.append(bet)
-    games[2].bets.append(bet)
+    games[0].bets.append(bet)
 
     db.session.commit()
     

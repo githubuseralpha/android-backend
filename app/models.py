@@ -84,6 +84,8 @@ class Game(db.Model):
     team1_odds = db.Column(db.Float, nullable=False)
     team2_odds = db.Column(db.Float, nullable=False)
     draw_odds = db.Column(db.Float, nullable=False)
+    team1_goals = db.Column(db.Integer, nullable=True)
+    team2_goals = db.Column(db.Integer, nullable=True)
     date = db.Column(db.DateTime(timezone=True), server_default=now())
     result = db.Column(db.Integer, nullable=False)
     bets = db.relationship('Bet')
@@ -98,10 +100,13 @@ class Game(db.Model):
            'team2': self.team2,
            'team1_odds': self.team1_odds,
            'team2_odds': self.team2_odds,
+           'team1_goals': self.team1_goals,
+           'team2_goals': self.team2_goals,
            'draw_odds': self.draw_odds,
            'result': self.result,
            'date': self.date,
            'league': self.league,
+           'country': League.query.get(self.league).country,
            'api_id': self.api_id
            }
         

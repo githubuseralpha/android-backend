@@ -62,8 +62,10 @@ def update_matches():
             elif home_goals < away_goals:
                 winner = 2
             else:
-                winner = 3
+                winner = 0
             game_inst[0].result = winner
+            game_inst[0].team1_goals = home_goals
+            game_inst[0].team2_goals = away_goals
             db.session.commit()
 
 
@@ -106,6 +108,7 @@ def add_matches():
         team1 = game["teams"]["home"]["name"]
         team2 = game["teams"]["away"]["name"]
         api_id = game["fixture"]["id"]
+        print(api_id)
         odd = [o for o in odds if o["fixture"]["id"] == api_id]
         team1_odds = odd[0]["bookmakers"][0]["bets"][0]["values"][0]["odd"] if odd else -1
         team2_odds = odd[0]["bookmakers"][0]["bets"][0]["values"][2]["odd"] if odd else -1
@@ -122,7 +125,7 @@ def add_matches():
             team2_odds=team2_odds,
             draw_odds=draw_odds,
             league=league.id,
-            result=0,
+            result=-1,
             api_id=api_id
         )
         db.session.add(new_game)
