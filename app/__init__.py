@@ -24,7 +24,5 @@ from app.jobs import *
 scheduler.init_app(app)
 scheduler.start()
 
-# first iteration
-if __name__ == "__main__:"
-        add_matches()
-        update_matches()
+# add_matches()
+# update_matches()

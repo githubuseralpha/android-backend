@@ -196,3 +196,38 @@ def register():
     db.session.add(user)
     db.session.commit()
     return Response(str({'Username': user.login, 'created': True}), status=201)
+
+
+@bp.route('/create-group', methods=('POST', ))
+def create_group():
+    request_data = request.get_json()
+    user = request_data['user']
+    name = request_data['name']
+    code = models.generate_code()
+    user_inst = models.User.query.get(user)
+    if not user_inst:
+        return Response(str({'created': False}), status=401)
+    
+    group = models.Group(name=name, code=code)
+    db.session.add(group)
+    user_inst.memberships.append(group)
+    db.session.commit()
+    return Response(str({'name': name, 'code': code, 'id': group.id}), status=201)
+
+
+@bp.route('/join-group', methods=('POST', ))
+def join_group():
+    request_data = request.get_json()
+    user = request_data['user']
+    code = request_data['code']
+    user_inst = models.User.query.get(user)
+    if not user_inst:
+        return Response(str({'error': 'User does not exist'}), status=401)
+    
+    group = models.Group.query.filter(models.Group.code==code).first()
+    if not group:
+        return Response(str({'error': 'Invalid code'}), status=400)
+
+    user_inst.memberships.append(group)
+    db.session.commit()
+    return Response(str({'name': group.name,'code': code, 'id': group.id}), status=200)

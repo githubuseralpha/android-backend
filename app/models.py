@@ -4,7 +4,7 @@ from . import db
 from sqlalchemy.sql.functions import now
 
 def generate_code():
-    return ("".join(list(random.choice(list(string.ascii_letters)) for _ in range(16))))
+    return ("".join(list(random.choice(list(string.ascii_letters)) for _ in range(7))))
 
 memberships = db.Table('memberships',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
@@ -52,6 +52,7 @@ class Group(db.Model):
         return {
            'id': self.id,
            'code': self.code,
+           'name': self.name,
            'leagues': [league.id for league in self.leagues],
            'members': [member.id for member in self.members]
            }
