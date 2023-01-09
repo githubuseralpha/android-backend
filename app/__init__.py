@@ -25,5 +25,6 @@ scheduler.init_app(app)
 scheduler.start()
 
 # first iteration
-add_matches()
-update_matches()
+if __name__ == "__main__:"
+        add_matches()
+        update_matches()
