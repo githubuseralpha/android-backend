@@ -144,7 +144,9 @@ def games_by_user(id):
         leagues += models.Group.query.get(membership.group).leagues
     for league in leagues:
         query += league.games
+    query = list(set(query))
     query.sort(key=lambda item: item.date)
+    query = [game for game in query if game.result == -1]
     return jsonify([game.serialize for game in query])
 
 
@@ -168,6 +170,37 @@ def bets_by_player(user_id):
                              .join(models.User, models.User.id==models.Bet.user) \
                              .join(models.Game, models.Game.id==models.Bet.game) \
                              .all()
+                             
+    # games = []
+    # print(user_id)
+    # memberships = models.User.query.get(user_id).memberships
+    # leagues = []
+    # for membership in memberships:
+    #     leagues += models.Group.query.get(membership.group).leagues
+    # for league in leagues:
+    #     games += league.games
+    # games.sort(key=lambda item: item.date)
+    # games = [game for game in games if game.result == -1]
+    
+    # result = []
+    # for game in games:
+    #     new_row = {
+    #         'game': game.serialize,
+    #         'odds': -1,
+    #         'option': -1,
+    #         'date': game.date,
+    #         'id': game.id,
+    #         'user': user_id,
+    #     }
+    #     result.append(new_row)
+        
+    # for bet in query:
+    #     game_id = bet.game
+    #     game = [res for res in result if res['id']==game_id]
+    #     if game:
+    #         game[0]['option'] = bet.option
+    #         game[0]['odds'] = bet.odds
+        
     return jsonify([bet.serialize for bet in query])
 
 @bp.route('/login', methods=('POST', ))

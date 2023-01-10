@@ -11,7 +11,7 @@ with open("app\\test_data\\leagues.json") as leagues_file:
     for i, league in enumerate(json.load(leagues_file)):
         league_api_names[league["apiId"]] = (league["name"], i)
         
-DAYS_AHEAD = -1
+DAYS_AHEAD = 1
 
 
 @scheduler.job(seconds=10, minutes=1, hours=0)
