@@ -8,10 +8,10 @@ from . import scheduler, models, db
 
 with open("app\\test_data\\leagues.json") as leagues_file:
     league_api_names = {}
-    for league in json.load(leagues_file):
-        league_api_names[league["apiId"]] = league["name"] 
+    for i, league in enumerate(json.load(leagues_file)):
+        league_api_names[league["apiId"]] = (league["name"], i)
         
-DAYS_AHEAD = 0
+DAYS_AHEAD = -1
 
 
 @scheduler.job(seconds=10, minutes=1, hours=0)
@@ -25,7 +25,7 @@ def clean_tokens():
 @scheduler.job(seconds=10, minutes=0, hours=1)
 def update_matches():
     print('UPDATE MATCHES')
-    date = datetime.date.today()
+    date = datetime.date.today() + datetime.timedelta(days=DAYS_AHEAD)
     url_fixtures =  f'https://v3.football.api-sports.io/fixtures?date=' + date.strftime("%Y-%m-%d")
     key = 'add14e4a8d6b3f8d81eb7677036180e8'
     host = 'v3.football.api-sports.io'
@@ -48,7 +48,7 @@ def update_matches():
         if comp not in league_api_names.keys():
             continue
         api_id = game["fixture"]["id"]
-
+        league_id = league_api_names[comp][1]
         
         home_goals = game["score"]["fulltime"]["home"]
         away_goals = game["score"]["fulltime"]["away"]
@@ -56,7 +56,8 @@ def update_matches():
             return
 
         game_inst = [game for game in game_query if game.api_id == api_id]
-        if game_inst:
+        if game_inst and game_inst[0].result == -1:
+            winner = -1
             if home_goals > away_goals:
                 winner = 1
             elif home_goals < away_goals:
@@ -66,6 +67,19 @@ def update_matches():
             game_inst[0].result = winner
             game_inst[0].team1_goals = home_goals
             game_inst[0].team2_goals = away_goals
+            
+            bets = game_inst[0].bets
+            print(bets)
+            for bet in bets:
+                factor = bet.odds if bet.odds != -1 else 1
+                memberships = models.Membership.query.filter(models.Membership.user==bet.user).all()
+                for m in memberships:
+                    group = models.Group.query.get(m.group)
+                    ls = [x.id for x in group.leagues]
+                    if league_id in ls:
+                        print("gotta add")
+                        m.score += (bet.option == winner) * factor
+            
             db.session.commit()
 
 
@@ -114,7 +128,7 @@ def add_matches():
         team2_odds = odd[0]["bookmakers"][0]["bets"][0]["values"][2]["odd"] if odd else -1
         draw_odds = odd[0]["bookmakers"][0]["bets"][0]["values"][1]["odd"] if odd else -1 
         date = datetime.date.today() + datetime.timedelta(days=DAYS_AHEAD)
-        league = [l for l in league_query if l.name == league_api_names[comp]][0]
+        league = [l for l in league_query if l.name == league_api_names[comp][0]][0]
         if [game for game in game_query if game.api_id == api_id]:
             return
         new_game = models.Game(

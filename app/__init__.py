@@ -25,4 +25,4 @@ scheduler.init_app(app)
 scheduler.start()
 
 # add_matches()
-# update_matches()
+update_matches()

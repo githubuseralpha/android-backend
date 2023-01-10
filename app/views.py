@@ -95,6 +95,7 @@ def post_bet():
     request_data = request.get_json()
     user = request_data['user']
     game = request_data['game']
+    
     option = request_data['option']  
     if option == 1:
         odds = models.Game.query.get(game).team1_odds
