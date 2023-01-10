@@ -274,3 +274,56 @@ def leave_group():
     db.session.delete(membership)
     db.session.commit()
     return Response(str({'name': group_inst.name,'code': group_inst.code, 'id': group_inst.id}), status=200)
+
+
+@bp.route('/stats/<int:id>', methods=('GET',))
+def stats(id):
+    user = models.User.query.get(id)
+    if not user:
+        return Response(str({'error': 'User does not exist'}), status=401)
+
+    teams = {}
+    no_bets = len(user.bets)
+    max_win = 0
+    total_points = 0
+    max_streak = 0
+    streak = 0
+    bets = sorted(user.bets, key=lambda x: x.date)
+    wins = 0
+    all = 0
+    for bet in bets:
+        game = models.Game.query.filter(models.Game.id == bet.game).first()
+        if game.result != -1:
+            all += 1
+            if game.result == bet.option:
+                wins += 1
+                total_points += bet.odds
+                max_win = max(max_win, bet.odds)
+                streak += 1
+                max_streak = max(max_streak, streak)
+            else:
+                streak = 0
+        
+        if bet.option == 1:
+            if not game.team1 in teams.keys():
+                teams[game.team1] = 0
+            teams[game.team1] += 1
+        elif bet.option == 2:
+            if not game.team2 in teams.keys():
+                teams[game.team2] = 0
+            teams[game.team2] += 1
+    most_freq_team = max(teams, key=teams.get) if teams else '-'
+    success_rate = wins / all
+    
+    return Response(
+        str({'total_points': total_points,
+             'no_bets': no_bets,
+             'max_win': max_win,
+             'max_streak': max_streak,
+             'most_freq_team': most_freq_team,
+             'success_rate': success_rate,}),
+        status=200
+    )
+    
+    
+    
