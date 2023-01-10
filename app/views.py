@@ -68,7 +68,7 @@ def users_by_group(id):
 @bp.route('/users-rank/<int:id>', methods=('GET',))
 def users_rank(id):
     query = models.Group.query.get(id).members
-    query = sorted(query, key=lambda x: x.score)
+    query = sorted(query, key=lambda x: -x.score)
     data = []
     for membership in query:
         x = models.User.query.get(membership.user).serialize
