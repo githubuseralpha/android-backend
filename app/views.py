@@ -313,7 +313,7 @@ def stats(id):
                 teams[game.team2] = 0
             teams[game.team2] += 1
     most_freq_team = max(teams, key=teams.get) if teams else '-'
-    success_rate = wins / all
+    success_rate = wins / all if all else 0
     
     return Response(
         str({'total_points': total_points,
