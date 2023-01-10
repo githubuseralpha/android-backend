@@ -50,8 +50,8 @@ def update_matches():
         api_id = game["fixture"]["id"]
 
         
-        home_goals = game["goals"]["home"]
-        away_goals = game["goals"]["away"]
+        home_goals = game["score"]["fulltime"]["home"]
+        away_goals = game["score"]["fulltime"]["away"]
         if home_goals == None:
             return
 

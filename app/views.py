@@ -68,7 +68,12 @@ def users_by_group(id):
 @bp.route('/users-rank/<int:id>', methods=('GET',))
 def users_rank(id):
     query = models.Group.query.get(id).members
-    return jsonify([user.serialize for user in query])
+    query = sorted(query, key=lambda x: x.score)
+    data = []
+    for membership in query:
+        x = models.User.query.get(membership.user).serialize
+        data.append({'login':  x['login'], 'id':  x['id'], 'score':  membership.score})
+    return jsonify(data)
 
 @bp.route('/user/<int:id>', methods=('GET',))
 def user(id):
@@ -135,7 +140,7 @@ def games_by_user(id):
     memberships = models.User.query.get(id).memberships
     leagues = []
     for membership in memberships:
-        leagues += membership.leagues
+        leagues += models.Group.query.get(membership.group).leagues
     for league in leagues:
         query += league.games
     query.sort(key=lambda item: item.date)
