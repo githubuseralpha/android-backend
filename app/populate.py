@@ -35,11 +35,10 @@ def populate():
             filtered.games.append(games[-1])
         users = []
         for user_data in json.load(users_file):
-            user = (User(login=user_data["login"], password=user_data["password"]))
+            user = User(login=user_data["login"], password=user_data["password"])
             users.append(user)
-            for membership in user_data["memberships"]:
-                user.memberships.append(groups[membership - 1])
             db.session.add(user)
+ 
         # for bet in json.load(bets_file):
         #     user = User.query.get(bet["user_id"])
         #     game = Game.query.get(bet["game_id"])

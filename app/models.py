@@ -6,12 +6,6 @@ from sqlalchemy.sql.functions import now
 def generate_code():
     return ("".join(list(random.choice(list(string.ascii_letters)) for _ in range(7))))
 
-memberships = db.Table('memberships',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True),
-    db.Column('score', db.Integer)
-)
-
 league_group = db.Table('league_group',
     db.Column('league_id', db.Integer, db.ForeignKey('league.id'), primary_key=True),
     db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True)
@@ -20,20 +14,19 @@ league_group = db.Table('league_group',
 class User(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     login = db.Column(db.String(100), nullable=False, unique=True)
-    memberships = db.relationship('Group', secondary=memberships, lazy='subquery',
-        backref=db.backref('members', lazy=True))
+    memberships = db.relationship('Membership')
     tokens = db.relationship("Token")
     password = db.Column(db.String(50), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     bets = db.relationship('Bet')
-    
+
     @property
     def serialize(self):
         return {
            'id': self.id,
            'login': self.login,
            'password': self.password,
-           'memberships': [membership.id for membership in self.memberships],
+           'memberships': [membership.group for membership in self.memberships],
            'bets': [bet.id for bet in self.bets]
            }
     
@@ -46,7 +39,8 @@ class Group(db.Model):
     code = db.Column(db.String(10), nullable=False)
     leagues = db.relationship('League', secondary=league_group, lazy='subquery',
         backref=db.backref('groups', lazy=True))
-    
+    members = db.relationship('Membership')
+
     @property
     def serialize(self):
         return {
@@ -145,4 +139,16 @@ class Bet(db.Model):
            'date': self.date,
            }
 
-
+class Membership(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user = db.Column(db.Integer, db.ForeignKey("user.id"))
+    group = db.Column(db.Integer, db.ForeignKey("group.id"))
+    score = db.Column(db.Float, nullable=False, default=0)
+    
+    @property
+    def serialize(self):
+        return {
+           'id': self.id,
+           'user': self.user,
+           **Group.query.get(self.group).serialize,
+           }

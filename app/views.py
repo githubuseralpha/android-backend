@@ -63,6 +63,11 @@ def group_by_user(id):
 @bp.route('/users-by-group/<int:id>', methods=('GET',))
 def users_by_group(id):
     query = models.Group.query.get(id).members
+    return jsonify([models.User.query.get(membership.user).serialize for membership in query])
+
+@bp.route('/users-rank/<int:id>', methods=('GET',))
+def users_rank(id):
+    query = models.Group.query.get(id).members
     return jsonify([user.serialize for user in query])
 
 @bp.route('/user/<int:id>', methods=('GET',))
@@ -203,6 +208,8 @@ def create_group():
     request_data = request.get_json()
     user = request_data['user']
     name = request_data['name']
+    leagues = request_data['leagues']
+    print(type(leagues))
     code = models.generate_code()
     user_inst = models.User.query.get(user)
     if not user_inst:
@@ -210,7 +217,11 @@ def create_group():
     
     group = models.Group(name=name, code=code)
     db.session.add(group)
-    user_inst.memberships.append(group)
+    db.session.commit()
+    for league in leagues:
+        group.leagues.append(models.League.query.get(league))
+    membership = models.Membership(user=user_inst.id, group=group.id)
+    db.session.add(membership)
     db.session.commit()
     return Response(str({'name': name, 'code': code, 'id': group.id}), status=201)
 
@@ -227,7 +238,33 @@ def join_group():
     group = models.Group.query.filter(models.Group.code==code).first()
     if not group:
         return Response(str({'error': 'Invalid code'}), status=400)
+    
+    if models.Membership.query.filter(models.Membership.user==user) \
+                              .filter(models.Membership.group==group.id).first():
+        return Response(str({'error': 'Already in group'}), status=400)
 
-    user_inst.memberships.append(group)
+    membership = models.Membership(user=user_inst.id, group=group.id)
+    db.session.add(membership)
     db.session.commit()
     return Response(str({'name': group.name,'code': code, 'id': group.id}), status=200)
+
+
+@bp.route('/leave-group', methods=('POST', ))
+def leave_group():
+    request_data = request.get_json()
+    user = request_data['user']
+    group = request_data['group']
+    user_inst = models.User.query.get(user)
+    if not user_inst:
+        return Response(str({'error': 'User does not exist'}), status=401)
+    
+    group_inst = models.Group.query.get(group)
+    if not group_inst:
+        return Response(str({'error': 'Invalid group id'}), status=400)
+
+    membership = models.Membership.query.filter(models.Membership.user==user_inst.id) \
+                                        .filter(models.Membership.group==group_inst.id).first()
+    
+    db.session.delete(membership)
+    db.session.commit()
+    return Response(str({'name': group_inst.name,'code': group_inst.code, 'id': group_inst.id}), status=200)
