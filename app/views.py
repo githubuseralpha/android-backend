@@ -20,8 +20,12 @@ def get_user(code):
     token = models.Token.query.filter(models.Token.code==code).first()
     if not token: return None
     user = token.user
+    print(user)
     return user
 
+def authenticate(user, token):
+    u = get_user(token)
+    return u == user
 
 @bp.route('/users', methods=('GET',))
 def users():
@@ -57,6 +61,9 @@ def games_by_league(id):
 
 @bp.route('/groups-by-user/<int:id>', methods=('GET',))
 def group_by_user(id):
+    print(id)
+    if not authenticate(id, request.headers.get('Token')):
+        return Response(str({'error': 'Invalid token'}), status=400)
     query = models.User.query.get(id).memberships
     return jsonify([group.serialize for group in query])
 
@@ -219,7 +226,7 @@ def login():
     if user.password != password:
         return Response(str({'error': 'Invalid password'}), status=404)
     token = models.Token(user=user.id, code=models.generate_code(),
-                         expiration=datetime.datetime.now() + datetime.timedelta(seconds=30))
+                         expiration=datetime.datetime.now() + datetime.timedelta(days=30))
     db.session.add(token)
     db.session.commit()
     return Response(str({'token': token.code,

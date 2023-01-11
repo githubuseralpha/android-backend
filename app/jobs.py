@@ -11,7 +11,8 @@ with open("app\\test_data\\leagues.json") as leagues_file:
     for i, league in enumerate(json.load(leagues_file)):
         league_api_names[league["apiId"]] = (league["name"], i)
         
-DAYS_AHEAD = 1
+ADD_DAYS_AHEAD = -5
+UPDATE_DAYS_AHEAD = 0
 
 
 @scheduler.job(seconds=10, minutes=1, hours=0)
@@ -25,7 +26,7 @@ def clean_tokens():
 @scheduler.job(seconds=10, minutes=0, hours=1)
 def update_matches():
     print('UPDATE MATCHES')
-    date = datetime.date.today() + datetime.timedelta(days=DAYS_AHEAD)
+    date = datetime.date.today() + datetime.timedelta(days=UPDATE_DAYS_AHEAD)
     url_fixtures =  f'https://v3.football.api-sports.io/fixtures?date=' + date.strftime("%Y-%m-%d")
     key = 'add14e4a8d6b3f8d81eb7677036180e8'
     host = 'v3.football.api-sports.io'
@@ -86,7 +87,7 @@ def update_matches():
 @scheduler.job(seconds=10, minutes=0, hours=24)
 def add_matches():
     print('ADD MATCHES')
-    date = datetime.date.today() + datetime.timedelta(days=DAYS_AHEAD)
+    date = datetime.date.today() + datetime.timedelta(days=ADD_DAYS_AHEAD)
     url_fixtures =  f'https://v3.football.api-sports.io/fixtures?date=' + date.strftime("%Y-%m-%d")
     url_odds =  f'https://v3.football.api-sports.io/odds?date=' + date.strftime("%Y-%m-%d")
     key = 'add14e4a8d6b3f8d81eb7677036180e8'
@@ -127,7 +128,7 @@ def add_matches():
         team1_odds = odd[0]["bookmakers"][0]["bets"][0]["values"][0]["odd"] if odd else -1
         team2_odds = odd[0]["bookmakers"][0]["bets"][0]["values"][2]["odd"] if odd else -1
         draw_odds = odd[0]["bookmakers"][0]["bets"][0]["values"][1]["odd"] if odd else -1 
-        date = datetime.date.today() + datetime.timedelta(days=DAYS_AHEAD)
+        date = datetime.date.today() + datetime.timedelta(days=ADD_DAYS_AHEAD)
         league = [l for l in league_query if l.name == league_api_names[comp][0]][0]
         if [game for game in game_query if game.api_id == api_id]:
             return
